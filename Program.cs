@@ -9,40 +9,17 @@ namespace Projekt1
     {
         static void Main(string[] args)
         {
+
+            //(string matrixFileName, string[] fileNames, List<char> alphabet) = ParseArguments(args);
+            string matrixFileName = "similarity.csv";
             string[] fileNames = new string[] { "plik2.csv", "plik1.csv" };
+            //string[] fileNames = new string[] { "plik2.csv", "plik1.csv" };
             List<char> alphabet = new List<char> { 'A', 'G', 'T', 'C', '-' };
             List<double[,]> resultProfiles = new List<double[,]>();
             List<List<char>> alphabets = new List<List<char>>();
             List<List<string>> matrices = new List<List<string>>();
-            Dictionary<(char, char), double> similarity = new Dictionary<(char, char), double>
-            {
-                { ('A', 'A'), 1 },
-                { ('C', 'C'), 1 },
-                { ('T', 'T'), 1 },
-                { ('G', 'G'), 1 },
-                { ('C', 'A'), 0 },
-                { ('T', 'A'), 0 },
-                { ('G', 'A'), 0 },
-                { ('-', 'A'), 0 },
-                { ('A', 'C'), 0 },
-                { ('T', 'C'), 0 },
-                { ('G', 'C'), 0 },
-                { ('-', 'C'), 0 },
-                { ('A', 'T'), 0 },
-                { ('C', 'T'), 0 },
-                { ('G', 'T'), 0 },
-                { ('-', 'T'), 0 },
-                { ('A', 'G'), 0 },
-                { ('C', 'G'), 0 },
-                { ('T', 'G'), 0 },
-                { ('-', 'G'), 0 },
-                { ('A', '-'), 0 },
-                { ('C', '-'), 0 },
-                { ('T', '-'), 0 },
-                { ('G', '-'), 0 },
-                { ('-', '-'), 0 },
+            Dictionary<(char, char), double> similarity = GetSimilarityMatrix(matrixFileName);
 
-            };
             try
             {
                 foreach (var fileName in fileNames)
@@ -73,6 +50,58 @@ namespace Projekt1
             }
         }
 
+        private static (string matrixFileName, string[] fileNames, List<char> alphabet) ParseArguments(string[] args)
+        {
+            string matrixFileName = string.Empty;
+            string[] fileNames = new string[2];
+            var alphabet = new List<char>();
+            for (int i = 0; i < args.Length; i += 2)
+            {
+                string command = args[i];
+                string argument = args[i + 1];
+                switch (command)
+                {
+                    case "--similarity":
+                    case "-s":
+                        matrixFileName = argument;
+                        break;
+                    case "--input":
+                    case "-i":
+                        fileNames = argument.Split(';');
+                        break;
+                    case "--alphabet":
+                    case "-a":
+                        alphabet = argument.Split(';').SelectMany(a => a.ToUpper().ToCharArray()).ToList();
+                        break;
+                }
+            }
+            return (matrixFileName, fileNames, alphabet);
+        }
+
+        private static Dictionary<(char, char), double> GetSimilarityMatrix(string fileName)
+        {
+            if (!File.Exists(fileName))
+            {
+                throw new Exception("File not exsists");
+            }
+            var result = new Dictionary<(char, char), double>();
+            using var fileReader = new StreamReader(fileName);
+            var header = fileReader.ReadLine().Split(';');
+            while (!fileReader.EndOfStream)
+            {
+                var line = fileReader.ReadLine();
+                var lineChars = line.Split(';');
+                for (var i = 1; i < lineChars.Length; i++)
+                {
+                    result.Add(
+                        (lineChars[0].ToCharArray().First(),
+                        header[i].ToCharArray().First()),
+                        double.Parse(lineChars[i]));
+                }
+            }
+            return result;
+        }
+
         private static string[] ConcatSequences(double[,] profile1,
                                                 double[,] profile2,
                                                 char[][] multi1,
@@ -84,10 +113,29 @@ namespace Projekt1
             var result = Enumerable.Repeat(string.Empty, result_length).ToArray();
             int i = profile1.GetLength(1);
             int j = profile2.GetLength(1);
-            while (i > 0 && j > 0)
+            var scoreMatrix = CreateScoreMatrix(profile1, profile2, alphabet, similarity);
+            PrintScoreMatrix(scoreMatrix);
+            while(i>0 || j > 0)
             {
-                (var newi, var newj) = GetBestMove(profile1, profile2, alphabet, similarity, i, j);
-                var s = Enumerable.Concat(multi1.Select(c => newi != i ? c[newi] : '-'), multi2.Select(c => newj != j ? c[newj] : '-')).ToArray();
+                var newi = i;
+                var newj = j;
+                switch (scoreMatrix[i, j])
+                {
+                    case 'C':
+                        newi -= 1;
+                        newj -= 1;
+                        break;
+                    case 'U':
+                        newi -= 1;
+                        break;
+                    case 'L':
+                        newj -= 1;
+                        break;
+                }
+                var s = Enumerable.Concat(
+                                        multi1.Select(c => newi != i && i > 0 ? c[i - 1] : '-'),
+                                        multi2.Select(c => newj != j && j > 0 ? c[j - 1] : '-')
+                                        ).ToArray();
                 for (int k = 0; k < result_length; k++)
                 {
                     result[k] = s[k] + result[k];
@@ -95,69 +143,182 @@ namespace Projekt1
                 i = newi;
                 j = newj;
             }
-            //if (i > 0)
-            //{
-            //    for (int k = 0; k < i; k++)
-            //    {
-            //        for (int l = 0; l < multi1.Length; l++)
-            //        {
-            //            result[l] = '-' + result[l];
-            //        }
-            //    }
-            //}
-            //if (j > 0)
-            //{
-            //    for (int k = 0; k < j; k++)
-            //    {
-            //        for (int l = multi1.Length; l < result_length; l++)
-            //        {
-            //            result[l] = '-' + result[l];
-            //        }
-            //    }
-            //}
             return result;
         }
 
-        private static (int, int) GetBestMove(double[,] profile1,
-                                              double[,] profile2,
-                                              List<char> alphabet,
-                                              Dictionary<(char, char), double> similarity,
-                                              int profile1Position,
-                                              int profile2Position)
-        {
-            var left = Calculate(profile1, profile1Position, profile2, profile2Position - 1, alphabet, similarity);
-            var cross = Calculate(profile1, profile1Position - 1, profile2, profile2Position - 1, alphabet, similarity);
-            var up = Calculate(profile1, profile1Position - 1, profile2, profile2Position, alphabet, similarity);
-            var max = new double[] { left, up, cross }.Max();
-            if (max == cross)
-            {
-                return (profile1Position - 1, profile2Position - 1);
-            }
-            if (max == up)
-            {
-                return (profile1Position - 1, profile2Position);
-            }
-            return (profile1Position, profile2Position - 1);
+        /* double GetSimilarity(profile p1, profile p2, int i, int j, matrix similarityMatrix)
+         * suma wg wzoru ktory rozpisalem
+         * 
+         * matrix computeAllignment(profile p1, profile p2, matrix similarityMatrix)
+         * matrix allignmentMatrix = new matrix(p1.Length +1, p2.Length+1)
+         * 0,0 = jest 0
+         * for (auto i =1; i <allignmentMatrix.X; i++)
+         * {
+         * allignmentMatrix(i,0) = alignmentMatrix(i-1,0) + GetSimilarity(p1(i), '-')
+         * }
+         * for (auto i =1; i <allignmentMatrix.Y; i++)
+         * {
+         * allignmentMatrix(0,i) = alignmentMatrix(0,j-1) + GetSimilarity(p2(i), '-')
+         * }
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * 
+         * */
 
+        private static void PrintScoreMatrix(double[,] matrix)
+        {
+            Console.WriteLine("Score Matrix:");
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    Console.Write($"{matrix[i, j].ToString("f2")}\t");
+                }
+                Console.Write("\n");
+            }
+        }
+        private static void PrintScoreMatrix(char[,] matrix)
+        {
+            Console.WriteLine("Score Matrix:");
+            for (int i = 0; i < matrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrix.GetLength(1); j++)
+                {
+                    Console.Write($"{matrix[i, j]}\t");
+                }
+                Console.Write("\n");
+            }
+        }
+
+        private static char[,] CreateScoreMatrix(
+            double[,] profile1,
+            double[,] profile2,
+            List<char> alphabet,
+            Dictionary<(char, char), double> similarity)
+        {
+            var matrix = new double[profile1.GetLength(1) + 1, profile2.GetLength(1) + 1];
+            var result = new char[profile1.GetLength(1) + 1, profile2.GetLength(1) + 1];
+            matrix[0, 0] = 0;
+            for (int i = 1; i <= profile1.GetLength(1); i++)
+            {
+                matrix[i, 0] = matrix[i - 1, 0] + Calculate(profile1,
+                                                            i - 1,
+                                                            profile1Indel: false,
+                                                            profile2,
+                                                            0,
+                                                            profile2Indel: true,
+                                                            alphabet,
+                                                            similarity);
+                result[i, 0] = 'U';
+            }
+            for (int j = 1; j <= profile2.GetLength(1); j++)
+            {
+                matrix[0, j] = matrix[0, j - 1] + Calculate(profile1,
+                                                            0,
+                                                            profile1Indel: true,
+                                                            profile2,
+                                                            j - 1,
+                                                            profile2Indel: false,
+                                                            alphabet,
+                                                            similarity);
+                result[0, j] = 'L';
+            }
+            for (int i = 1; i <= profile1.GetLength(1); i++)
+            {
+                for (int j = 1; j <= profile2.GetLength(1); j++)
+                {
+                    var left = matrix[i, j - 1] + Calculate(profile1,
+                                                            i - 1,
+                                                            profile1Indel: true,
+                                                            profile2,
+                                                            j - 1,
+                                                            profile2Indel: false,
+                                                            alphabet,
+                                                            similarity);
+                    var cross = matrix[i - 1, j - 1] + Calculate(profile1,
+                                                                i - 1,
+                                                                profile1Indel: false,
+                                                                profile2,
+                                                                j - 1,
+                                                                profile2Indel: false,
+                                                                alphabet,
+                                                                similarity);
+                    var up = matrix[i - 1, j] + Calculate(profile1,
+                                                          i - 1,
+                                                          profile1Indel: false,
+                                                          profile2,
+                                                          j - 1,
+                                                          profile2Indel: true,
+                                                          alphabet,
+                                                          similarity);
+                    matrix[i, j] = new double[] { up, left, cross }.Max();
+                    if(matrix[i, j] == cross)
+                    {
+                        result[i, j] = 'C';
+                    }
+                    else if (matrix[i, j] == left)
+                    {
+                        result[i, j] = 'L';
+                    }
+                    else
+                    {
+                        result[i, j] = 'U';
+                    }
+                }
+            }
+            return result;
         }
 
         private static double Calculate(double[,] profile1,
                                         int profile1Position,
+                                        bool profile1Indel,
                                         double[,] profile2,
                                         int profile2Position,
+                                        bool profile2Indel,
                                         List<char> alphabet,
                                         Dictionary<(char, char), double> similarity)
         {
             double result = 0;
-            if(profile2Position >= profile2.GetLength(1) || profile1Position >= profile1.GetLength(1))
+            if (profile2Position >= profile2.GetLength(1)
+                || profile1Position >= profile1.GetLength(1)
+                || profile1Position < 0
+                || profile2Position < 0)
             {
                 return result;
             }
-            for (int i = 0; i < profile1.GetLength(1); i++)
+            if (profile1Indel)
             {
-                for (int j = 0; j < profile1.GetLength(1); j++)
+                for (int i = 0; i < profile2.GetLength(0); i++)
                 {
-                    result += profile1[i, profile1Position] * profile2[j, profile2Position] * similarity[(alphabet[i], alphabet[j])];
+                    result += 1 * profile2[i, profile2Position] * similarity[('-', alphabet[i])];
+                }
+                return result;
+            }
+            if (profile2Indel)
+            {
+                for (int i = 0; i < profile1.GetLength(0); i++)
+                {
+                    result += 1 * profile1[i, profile1Position] * similarity[('-', alphabet[i])];
+                }
+                return result;
+            }
+            for (int i = 0; i < profile1.GetLength(0); i++)
+            {
+                for (int j = 0; j < profile2.GetLength(0); j++)
+                {
+                    result += (profile1Indel ? 1 : profile1[i, profile1Position]) *
+                              (profile2Indel ? 1 : profile2[j, profile2Position]) *
+                              similarity[(profile1Indel ? '-' : alphabet[i],
+                                          profile2Indel ? '-' : alphabet[j])];
                 }
             }
             return result;
