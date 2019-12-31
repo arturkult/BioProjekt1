@@ -4,12 +4,22 @@ namespace Projekt1
 {
     public class GuideTreeNode
     {
-        //wartosci testowe
-        public int value;
-        public List<GuideTreeNode> children = new List<GuideTreeNode>();
+        public double distanceToLeftChild;
+        public GuideTreeNode leftChild;
 
-        public GuideTreeNode()
+        public double distanceToRightChild;
+        public GuideTreeNode rightChild;
+
+        public string name;
+
+        public GuideTreeNode(double distanceToLeftChild, GuideTreeNode leftChild,
+            double distanceToRightChild, GuideTreeNode rightChild, string name)
         {
+            this.distanceToLeftChild = distanceToLeftChild;
+            this.leftChild = leftChild;
+            this.distanceToRightChild = distanceToRightChild;
+            this.rightChild = rightChild;
+            this.name = name;
         }
     }
 }
