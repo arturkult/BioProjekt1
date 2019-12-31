@@ -412,5 +412,12 @@ namespace Projekt1
                 Console.Write("\n");
             }
         }
+
+        static GuideTree CreateGuideTreeWithUPGMA()
+        {
+            GuideTree guideTree = new GuideTree();
+
+            return guideTree;
+        }
     }
 }
