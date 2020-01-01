@@ -413,7 +413,8 @@ namespace Projekt1
             }
         }
 
-        static double[,] CreateDistanceMatrix() {
+        static double[,] CreateDistanceMatrix()
+        {
             // do celow testowych
             var result = new double[7, 7];
             result[1, 0] = 19;
@@ -440,11 +441,46 @@ namespace Projekt1
             return result;
         }
 
-        static GuideTree CreateGuideTreeWithUPGMA()
+        static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix)
         {
             GuideTree guideTree = new GuideTree();
-
+            DoUPGMAIteration(guideTree, distanceMatrix);
             return guideTree;
+        }
+
+        static void DoUPGMAIteration(GuideTree guideTree, double[,] distanceMatrix)
+        {
+            (int, int) shortestDistanceValueCoordinates;
+
+            if (distanceMatrix.Length <= 1)
+            {
+                return;
+            }
+
+
+            shortestDistanceValueCoordinates = FindShortestPairwiseDistance(distanceMatrix);
+
+        }
+
+        static (int, int) FindShortestPairwiseDistance(double[,] distanceMatrix)
+        {
+            int matrixSize = distanceMatrix.GetLength(0);
+            double shortestDistanceValue = distanceMatrix[0, 1];
+            (int, int) shortestDistanceValueCoordinates = (0, 1);
+
+            for (int i = 0; i < matrixSize; i++)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    if (distanceMatrix[i, j] > shortestDistanceValue)
+                    {
+                        shortestDistanceValue = distanceMatrix[i, j];
+                        shortestDistanceValueCoordinates = (i, j);
+                    }
+                }
+            }
+
+            return shortestDistanceValueCoordinates;
         }
     }
 }
