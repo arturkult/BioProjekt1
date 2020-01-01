@@ -22,26 +22,29 @@ namespace Projekt1
 
             try
             {
-                foreach (var fileName in fileNames)
-                {
-                    matrices.Add(CreateMatrix(fileName));
-                    var profile = CreateProfile(matrices.Last(), alphabet);
-                    resultProfiles.Add(profile);
-                    PrintProfileMatrix(profile, alphabet);
-                    var consensusWord = CreateConsensusWord(profile, alphabet);
-                    Console.WriteLine($"Słowo konsensusowe: {consensusWord}");
-                }
-                var concatenated = ConcatSequences(resultProfiles.First(),
-                                resultProfiles.Last(),
-                                matrices.First().Select(s => s.ToCharArray()).ToArray(),
-                                matrices.Last().Select(s => s.ToCharArray()).ToArray(),
-                                alphabet,
-                                similarity);
-                Console.WriteLine("Złożenie wielodopasowań");
-                foreach (var s in concatenated)
-                {
-                    Console.WriteLine(s);
-                }
+                //foreach (var fileName in fileNames)
+                //{
+                //    matrices.Add(CreateMatrix(fileName));
+                //    var profile = CreateProfile(matrices.Last(), alphabet);
+                //    resultProfiles.Add(profile);
+                //    PrintProfileMatrix(profile, alphabet);
+                //    var consensusWord = CreateConsensusWord(profile, alphabet);
+                //    Console.WriteLine($"Słowo konsensusowe: {consensusWord}");
+                //}
+                //var concatenated = ConcatSequences(resultProfiles.First(),
+                //                resultProfiles.Last(),
+                //                matrices.First().Select(s => s.ToCharArray()).ToArray(),
+                //                matrices.Last().Select(s => s.ToCharArray()).ToArray(),
+                //                alphabet,
+                //                similarity);
+                //Console.WriteLine("Złożenie wielodopasowań");
+                //foreach (var s in concatenated)
+                //{
+                //    Console.WriteLine(s);
+                //}
+
+                var result = FindShortestPairwiseDistance(CreateDistanceMatrix());
+                Console.WriteLine(result);
             }
             catch (Exception e)
             {
@@ -444,35 +447,35 @@ namespace Projekt1
         static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix)
         {
             GuideTree guideTree = new GuideTree();
-            DoUPGMAIteration(guideTree, distanceMatrix);
+            DoUPGMAIteration(guideTree, distanceMatrix, distanceMatrix);
             return guideTree;
         }
 
-        static void DoUPGMAIteration(GuideTree guideTree, double[,] distanceMatrix)
+        static void DoUPGMAIteration(GuideTree guideTree, double[,] actualDistanceMatrix, double[,] originalDistanceMatrix)
         {
             (int, int) shortestDistanceValueCoordinates;
 
-            if (distanceMatrix.Length <= 1)
+            if (actualDistanceMatrix.Length <= 1)
             {
                 return;
             }
 
 
-            shortestDistanceValueCoordinates = FindShortestPairwiseDistance(distanceMatrix);
+            shortestDistanceValueCoordinates = FindShortestPairwiseDistance(actualDistanceMatrix);
 
         }
 
         static (int, int) FindShortestPairwiseDistance(double[,] distanceMatrix)
         {
             int matrixSize = distanceMatrix.GetLength(0);
-            double shortestDistanceValue = distanceMatrix[0, 1];
-            (int, int) shortestDistanceValueCoordinates = (0, 1);
+            double shortestDistanceValue = distanceMatrix[1, 0];
+            (int, int) shortestDistanceValueCoordinates = (1, 0);
 
             for (int i = 0; i < matrixSize; i++)
             {
                 for (int j = 0; j < i; j++)
                 {
-                    if (distanceMatrix[i, j] > shortestDistanceValue)
+                    if (distanceMatrix[i, j] < shortestDistanceValue)
                     {
                         shortestDistanceValue = distanceMatrix[i, j];
                         shortestDistanceValueCoordinates = (i, j);
