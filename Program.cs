@@ -467,11 +467,10 @@ namespace Projekt1
 
         static (int, int) FindShortestPairwiseDistance(double[,] distanceMatrix)
         {
-            int matrixSize = distanceMatrix.GetLength(0);
             double shortestDistanceValue = distanceMatrix[1, 0];
             (int, int) shortestDistanceValueCoordinates = (1, 0);
 
-            for (int i = 0; i < matrixSize; i++)
+            for (int i = 0; i < distanceMatrix.GetLength(0); i++)
             {
                 for (int j = 0; j < i; j++)
                 {
@@ -484,6 +483,31 @@ namespace Projekt1
             }
 
             return shortestDistanceValueCoordinates;
+        }
+
+        static double[,] CreateNewDistanceMatrix(double[,] actualDistanceMatrix, List<List<int>> idsOfSequencesInGroups,
+            double[,] originalDistanceMatrix)
+        {
+            int newLength = actualDistanceMatrix.GetLength(0) - 1;
+            double[,] result = new double[newLength, newLength];
+
+            for (int i = 0; i < newLength; i++)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    result[i, j] = CalculateDistanceForDistanceMatrixCell(actualDistanceMatrix, idsOfSequencesInGroups,
+                        originalDistanceMatrix, (i,j));
+                }
+            }
+            return result;
+        }
+
+        static double CalculateDistanceForDistanceMatrixCell(double[,] actualDistanceMatrix, List<List<int>> idsOfSequencesInGroups,
+            double[,] originalDistanceMatrix, (int, int) cellCoordinates)
+        {
+            double result = 0;
+
+            return result;
         }
     }
 }
