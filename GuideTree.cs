@@ -3,7 +3,7 @@ namespace Projekt1
 {
     public class GuideTree
     {
-        public GuideTreeNode rootNode = null;
+        public GuideTreeNode rootNode;
 
         public GuideTree()
         {
@@ -36,7 +36,6 @@ namespace Projekt1
                 Console.Write(subtreeRoot.distanceToRightChild + " -> ");
                 printSubtree(subtreeRoot.rightChild, indentation + additionalIndentation);
             }
-
         }
 
     }

@@ -413,6 +413,33 @@ namespace Projekt1
             }
         }
 
+        static double[,] CreateDistanceMatrix() {
+            // do celow testowych
+            var result = new double[7, 7];
+            result[1, 0] = 19;
+            result[2, 0] = 27;
+            result[2, 1] = 31;
+            result[3, 0] = 8;
+            result[3, 1] = 18;
+            result[3, 2] = 26;
+            result[4, 0] = 33;
+            result[4, 1] = 36;
+            result[4, 2] = 41;
+            result[4, 3] = 31;
+            result[5, 0] = 18;
+            result[5, 1] = 1;
+            result[5, 2] = 32;
+            result[5, 3] = 17;
+            result[5, 4] = 35;
+            result[6, 0] = 13;
+            result[6, 1] = 13;
+            result[6, 2] = 29;
+            result[6, 3] = 14;
+            result[6, 4] = 28;
+            result[6, 5] = 12;
+            return result;
+        }
+
         static GuideTree CreateGuideTreeWithUPGMA()
         {
             GuideTree guideTree = new GuideTree();
