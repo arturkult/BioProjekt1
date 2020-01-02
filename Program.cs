@@ -468,7 +468,7 @@ namespace Projekt1
 
             for (int i = 0; i < sequencesNames.Count; i++)
             {
-                result.Add(new GuideTreeNode(0, null, null, sequencesNames[i]));
+                result.Add(new GuideTreeNode(0, 0, null, null, sequencesNames[i]));
             }
 
             return result;

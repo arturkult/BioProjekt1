@@ -17,7 +17,7 @@ namespace Projekt1
         {
             double distanceToChild = distance / 2;
             GuideTreeNode newGuideTreeNode =
-                new GuideTreeNode(distanceToChild, groups[indexOfFirstGroup], groups[indexOfSecondGroup]);
+                new GuideTreeNode(distanceToChild, distanceToChild, groups[indexOfFirstGroup], groups[indexOfSecondGroup]);
 
             UpdateGroups(newGuideTreeNode, indexOfFirstGroup, indexOfSecondGroup);
             if (groups.Count == 1)
@@ -68,9 +68,9 @@ namespace Projekt1
             {
                 string additionalIndentation = "\t";
 
-                Console.WriteLine(indentation + Math.Round(subtreeRoot.distanceToChild, 3) + " -> ");
+                Console.WriteLine(indentation + Math.Round(subtreeRoot.distanceToLeftChild, 3) + " -> ");
                 PrintSubtree(subtreeRoot.leftChild, indentation + additionalIndentation);
-                Console.WriteLine(indentation + Math.Round(subtreeRoot.distanceToChild, 3) + " -> ");
+                Console.WriteLine(indentation + Math.Round(subtreeRoot.distanceToRightChild, 3) + " -> ");
                 PrintSubtree(subtreeRoot.rightChild, indentation + additionalIndentation);
             }
         }
