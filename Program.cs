@@ -448,7 +448,7 @@ namespace Projekt1
 
         static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix)
         {
-            GuideTree guideTree = new GuideTree();
+            GuideTree guideTree = new GuideTree(InitializeGuideTreeGroups(distanceMatrix.GetLength(0)));
             List<List<int>> idsOfSequencesInGroups = new List<List<int>>();
 
             for (int i = 0; i < distanceMatrix.GetLength(0); i++)
@@ -460,6 +460,18 @@ namespace Projekt1
 
             DoUPGMAIteration(guideTree, distanceMatrix, distanceMatrix,idsOfSequencesInGroups);
             return guideTree;
+        }
+
+        static List<GuideTreeNode> InitializeGuideTreeGroups(int numberOfSublists)
+        {
+            List<GuideTreeNode> result = new List<GuideTreeNode>();
+
+            for (int i = 0; i < numberOfSublists; i++)
+            {
+                result.Add(new GuideTreeNode(0, null, null, i.ToString()));
+            }
+
+            return result;
         }
 
         static void DoUPGMAIteration(GuideTree guideTree, double[,] actualDistanceMatrix,
