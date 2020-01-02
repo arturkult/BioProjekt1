@@ -13,13 +13,13 @@ namespace Projekt1
             this.groups = groups;
         }
 
-        public void joinGroups(int indexOfFirstGroup, int indexOfSecondGroup, double distance)
+        public void JoinGroups(int indexOfFirstGroup, int indexOfSecondGroup, double distance)
         {
             double distanceToChild = distance / 2;
             GuideTreeNode newGuideTreeNode =
                 new GuideTreeNode(distanceToChild, groups[indexOfFirstGroup], groups[indexOfSecondGroup]);
 
-            updateGroups();
+            UpdateGroups(newGuideTreeNode, indexOfFirstGroup, indexOfSecondGroup);
             if (groups.Count == 1)
             {
                 rootNode = groups[0];
@@ -27,21 +27,35 @@ namespace Projekt1
 
         }
 
-        private void updateGroups(GuideTreeNode guideTreeNode, int indexOfFirstGroup, int indexOfSecondGroup)
+        private void UpdateGroups(GuideTreeNode newGuideTreeNode, int indexOfFirstGroup, int indexOfSecondGroup)
         {
+            List<GuideTreeNode> newGroups = new List<GuideTreeNode>();
 
+            for (int i = 0; i < groups.Count; i++)
+            {
+                if (i != indexOfFirstGroup && i != indexOfSecondGroup)
+                {
+                    newGroups.Add(groups[i]);
+                }
+                else if (i == indexOfFirstGroup)
+                {
+                    newGroups.Add(newGuideTreeNode);
+                }
+            }
+
+            groups = newGroups;
         }
 
-        public void printTree()
+        public void PrintTree()
         {
             if (rootNode != null)
             {
-                printSubtree(rootNode, "");
+                PrintSubtree(rootNode, "");
             }
 
         }
 
-        private void printSubtree(GuideTreeNode subtreeRoot, string indentation) {
+        private void PrintSubtree(GuideTreeNode subtreeRoot, string indentation) {
             if (subtreeRoot == null)
             {
                 Console.WriteLine();
@@ -55,9 +69,9 @@ namespace Projekt1
                 string additionalIndentation = "\t\t";
 
                 Console.Write(subtreeRoot.distanceToChild + " -> ");
-                printSubtree(subtreeRoot.leftChild, indentation + additionalIndentation);
+                PrintSubtree(subtreeRoot.leftChild, indentation + additionalIndentation);
                 Console.Write(subtreeRoot.distanceToChild + " -> ");
-                printSubtree(subtreeRoot.rightChild, indentation + additionalIndentation);
+                PrintSubtree(subtreeRoot.rightChild, indentation + additionalIndentation);
             }
         }
 
