@@ -516,6 +516,10 @@ namespace Projekt1
         static List<List<int>> UpdateSequencesGroups(List<List<int>> idsOfSequencesInGroups, (int, int) shortestDistanceValueCoordinates)
         {
             List<List<int>> newIdsOfSequencesInGroups = new List<List<int>>();
+            int idOfLowerCoordinate = shortestDistanceValueCoordinates.Item2 >= shortestDistanceValueCoordinates.Item1 ?
+                shortestDistanceValueCoordinates.Item1 : shortestDistanceValueCoordinates.Item2;
+            int idOfGreaterCoordinate = shortestDistanceValueCoordinates.Item1 == idOfLowerCoordinate ?
+                shortestDistanceValueCoordinates.Item2 : shortestDistanceValueCoordinates.Item1;
 
             for (int i = 0; i < idsOfSequencesInGroups.Count; i++)
             {
@@ -523,13 +527,14 @@ namespace Projekt1
                 {
                     newIdsOfSequencesInGroups.Add(idsOfSequencesInGroups[i]);
                 }
-                else if (i == shortestDistanceValueCoordinates.Item1)
+                else if (i == idOfLowerCoordinate)
                 {
                     newIdsOfSequencesInGroups.Add(
                         idsOfSequencesInGroups[i].Concat(
-                            idsOfSequencesInGroups[shortestDistanceValueCoordinates.Item2]).ToList());
+                            idsOfSequencesInGroups[idOfGreaterCoordinate]).ToList());
                 }
             }
+
             return newIdsOfSequencesInGroups;
         }
 
@@ -547,6 +552,7 @@ namespace Projekt1
                         originalDistanceMatrix, (i,j));
                 }
             }
+
             return result;
         }
 
