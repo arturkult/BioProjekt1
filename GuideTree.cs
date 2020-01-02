@@ -68,9 +68,9 @@ namespace Projekt1
             {
                 string additionalIndentation = "\t\t";
 
-                Console.Write(subtreeRoot.distanceToChild + " -> ");
+                Console.WriteLine(indentation + subtreeRoot.distanceToChild + " -> ");
                 PrintSubtree(subtreeRoot.leftChild, indentation + additionalIndentation);
-                Console.Write(subtreeRoot.distanceToChild + " -> ");
+                Console.WriteLine(indentation + subtreeRoot.distanceToChild + " -> ");
                 PrintSubtree(subtreeRoot.rightChild, indentation + additionalIndentation);
             }
         }
