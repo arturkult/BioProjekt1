@@ -23,29 +23,29 @@ namespace Projekt1
 
             try
             {
-                //foreach (var fileName in fileNames)
-                //{
-                //    matrices.Add(CreateMatrix(fileName));
-                //    var profile = CreateProfile(matrices.Last(), alphabet);
-                //    resultProfiles.Add(profile);
-                //    PrintProfileMatrix(profile, alphabet);
-                //    var consensusWord = CreateConsensusWord(profile, alphabet);
-                //    Console.WriteLine($"Słowo konsensusowe: {consensusWord}");
-                //}
-                //var concatenated = ConcatSequences(resultProfiles.First(),
-                //                resultProfiles.Last(),
-                //                matrices.First().Select(s => s.ToCharArray()).ToArray(),
-                //                matrices.Last().Select(s => s.ToCharArray()).ToArray(),
-                //                alphabet,
-                //                similarity);
-                //Console.WriteLine("Złożenie wielodopasowań");
-                //foreach (var s in concatenated)
-                //{
-                //    Console.WriteLine(s);
-                //}
+                foreach (var fileName in fileNames)
+                {
+                    matrices.Add(CreateMatrix(fileName));
+                    var profile = CreateProfile(matrices.Last(), alphabet);
+                    resultProfiles.Add(profile);
+                    PrintProfileMatrix(profile, alphabet);
+                    var consensusWord = CreateConsensusWord(profile, alphabet);
+                    Console.WriteLine($"Słowo konsensusowe: {consensusWord}");
+                }
+                var concatenated = ConcatSequences(resultProfiles.First(),
+                                resultProfiles.Last(),
+                                matrices.First().Select(s => s.ToCharArray()).ToArray(),
+                                matrices.Last().Select(s => s.ToCharArray()).ToArray(),
+                                alphabet,
+                                similarity);
+                Console.WriteLine("Złożenie wielodopasowań");
+                foreach (var s in concatenated)
+                {
+                    Console.WriteLine(s);
+                }
 
                 guideTree = CreateGuideTreeWithUPGMA(CreateDistanceMatrix(), new List<string> { "A", "B", "C", "D", "E", "F", "G"});
-                Console.WriteLine("Guide tree:");
+                Console.WriteLine("\nGuide tree:");
                 guideTree.PrintTree();
             }
             catch (Exception e)
