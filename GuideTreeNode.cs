@@ -4,20 +4,16 @@ namespace Projekt1
 {
     public class GuideTreeNode
     {
-        public double distanceToLeftChild;
+        public double distanceToChild;
         public GuideTreeNode leftChild;
-
-        public double distanceToRightChild;
         public GuideTreeNode rightChild;
-
         public string name;
 
-        public GuideTreeNode(double distanceToLeftChild, GuideTreeNode leftChild,
-            double distanceToRightChild, GuideTreeNode rightChild, string name)
+        public GuideTreeNode(double distanceToChild, GuideTreeNode leftChild,
+            GuideTreeNode rightChild, string name = "")
         {
-            this.distanceToLeftChild = distanceToLeftChild;
+            this.distanceToChild = distanceToChild;
             this.leftChild = leftChild;
-            this.distanceToRightChild = distanceToRightChild;
             this.rightChild = rightChild;
             this.name = name;
         }

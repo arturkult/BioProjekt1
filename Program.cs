@@ -19,6 +19,7 @@ namespace Projekt1
             List<List<char>> alphabets = new List<List<char>>();
             List<List<string>> matrices = new List<List<string>>();
             Dictionary<(char, char), double> similarity = GetSimilarityMatrix(matrixFileName);
+            GuideTree guideTree;
 
             try
             {
@@ -43,7 +44,9 @@ namespace Projekt1
                 //    Console.WriteLine(s);
                 //}
 
-                CreateGuideTreeWithUPGMA(CreateDistanceMatrix());
+                guideTree = CreateGuideTreeWithUPGMA(CreateDistanceMatrix());
+                Console.WriteLine("Guide tree:");
+                guideTree.printTree();
             }
             catch (Exception e)
             {
@@ -500,7 +503,7 @@ namespace Projekt1
         {
             List<List<int>> newIdsOfSequencesInGroups = new List<List<int>>();
 
-            for (int i = 0; i < idsOfSequencesInGroups.Count(); i++)
+            for (int i = 0; i < idsOfSequencesInGroups.Count; i++)
             {
                 if (i != shortestDistanceValueCoordinates.Item1 && i != shortestDistanceValueCoordinates.Item2)
                 {
@@ -540,11 +543,11 @@ namespace Projekt1
             int numberOfElements = 0;
 
 
-            for (int i = 0; i < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).Count(); i++)
+            for (int i = 0; i < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).Count; i++)
             {
                 int indexOfFirstElement = idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).ElementAt(i);
 
-                for (int j = 0; j < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).Count(); j++)
+                for (int j = 0; j < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).Count; j++)
                 {
                     int indexOfSecondElement = idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).ElementAt(j);
                     sum += originalDistanceMatrix[indexOfFirstElement, indexOfSecondElement];
