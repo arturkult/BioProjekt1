@@ -570,7 +570,9 @@ namespace Projekt1
                 for (int j = 0; j < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).Count; j++)
                 {
                     int indexOfSecondElement = idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).ElementAt(j);
-                    sum += originalDistanceMatrix[indexOfFirstElement, indexOfSecondElement];
+                    sum += indexOfFirstElement > indexOfSecondElement ?
+                        originalDistanceMatrix[indexOfFirstElement, indexOfSecondElement] :
+                        originalDistanceMatrix[indexOfSecondElement, indexOfFirstElement];
                     numberOfElements++;
                 }
             }
