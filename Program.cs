@@ -44,7 +44,7 @@ namespace Projekt1
                 //    Console.WriteLine(s);
                 //}
 
-                guideTree = CreateGuideTreeWithUPGMA(CreateDistanceMatrix());
+                guideTree = CreateGuideTreeWithUPGMA(CreateDistanceMatrix(), new List<string> { "A", "B", "C", "D", "E", "F", "G"});
                 Console.WriteLine("Guide tree:");
                 guideTree.PrintTree();
             }
@@ -446,9 +446,9 @@ namespace Projekt1
             return result;
         }
 
-        static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix)
+        static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix, List<string> sequencesNames)
         {
-            GuideTree guideTree = new GuideTree(InitializeGuideTreeGroups(distanceMatrix.GetLength(0)));
+            GuideTree guideTree = new GuideTree(InitializeGuideTreeGroups(sequencesNames));
             List<List<int>> idsOfSequencesInGroups = new List<List<int>>();
 
             for (int i = 0; i < distanceMatrix.GetLength(0); i++)
@@ -462,13 +462,13 @@ namespace Projekt1
             return guideTree;
         }
 
-        static List<GuideTreeNode> InitializeGuideTreeGroups(int numberOfSublists)
+        static List<GuideTreeNode> InitializeGuideTreeGroups(List<string> sequencesNames)
         {
             List<GuideTreeNode> result = new List<GuideTreeNode>();
 
-            for (int i = 0; i < numberOfSublists; i++)
+            for (int i = 0; i < sequencesNames.Count; i++)
             {
-                result.Add(new GuideTreeNode(0, null, null, i.ToString()));
+                result.Add(new GuideTreeNode(0, null, null, sequencesNames[i]));
             }
 
             return result;
