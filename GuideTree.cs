@@ -37,7 +37,7 @@ namespace Projekt1
                 {
                     newGroups.Add(groups[i]);
                 }
-                else if (i == indexOfFirstGroup)
+                else if (i == indexOfSecondGroup)
                 {
                     newGroups.Add(newGuideTreeNode);
                 }
