@@ -15,9 +15,11 @@ namespace Projekt1
 
         public void JoinGroups(int indexOfFirstGroup, int indexOfSecondGroup, double distance)
         {
-            double distanceToChild = distance / 2;
+            double distanceToLeaf = distance / 2;
             GuideTreeNode newGuideTreeNode =
-                new GuideTreeNode(distanceToChild, distanceToChild, groups[indexOfFirstGroup], groups[indexOfSecondGroup]);
+                new GuideTreeNode(distanceToLeaf - CalculateDistanceToLeafOfChild(groups[indexOfFirstGroup]),
+                distanceToLeaf - CalculateDistanceToLeafOfChild(groups[indexOfSecondGroup]),
+                groups[indexOfFirstGroup], groups[indexOfSecondGroup]);
 
             UpdateGroups(newGuideTreeNode, indexOfFirstGroup, indexOfSecondGroup);
             if (groups.Count == 1)
@@ -25,6 +27,18 @@ namespace Projekt1
                 rootNode = groups[0];
             }
 
+        }
+
+        private double CalculateDistanceToLeafOfChild(GuideTreeNode childNode)
+        {
+            double result = 0;
+
+            while (childNode.leftChild != null)
+            {
+                result += childNode.distanceToLeftChild;
+                childNode = childNode.leftChild;
+            }
+            return result;
         }
 
         private void UpdateGroups(GuideTreeNode newGuideTreeNode, int indexOfFirstGroup, int indexOfSecondGroup)
