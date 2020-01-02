@@ -43,8 +43,7 @@ namespace Projekt1
                 //    Console.WriteLine(s);
                 //}
 
-                var result = FindShortestPairwiseDistance(CreateDistanceMatrix());
-                Console.WriteLine(result);
+                CreateGuideTreeWithUPGMA(CreateDistanceMatrix());
             }
             catch (Exception e)
             {
@@ -474,6 +473,7 @@ namespace Projekt1
             idsOfSequencesInGroups = UpdateSequencesGroups(idsOfSequencesInGroups, shortestDistanceValueCoordinates);
             actualDistanceMatrix = CreateNewDistanceMatrix(actualDistanceMatrix, idsOfSequencesInGroups, originalDistanceMatrix);
 
+            DoUPGMAIteration(guideTree, actualDistanceMatrix, originalDistanceMatrix, idsOfSequencesInGroups);
         }
 
         static (int, int) FindShortestPairwiseDistance(double[,] distanceMatrix)
@@ -526,14 +526,14 @@ namespace Projekt1
             {
                 for (int j = 0; j < i; j++)
                 {
-                    result[i, j] = CalculateDistanceForDistanceMatrixCell(idsOfSequencesInGroups,
+                    result[i, j] = CalculateValueForDistanceMatrixCell(idsOfSequencesInGroups,
                         originalDistanceMatrix, (i,j));
                 }
             }
             return result;
         }
 
-        static double CalculateDistanceForDistanceMatrixCell(List<List<int>> idsOfSequencesInGroups,
+        static double CalculateValueForDistanceMatrixCell(List<List<int>> idsOfSequencesInGroups,
             double[,] originalDistanceMatrix, (int, int) cellCoordinates)
         {
             double sum = 0;
@@ -544,7 +544,7 @@ namespace Projekt1
             {
                 int indexOfFirstElement = idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).ElementAt(i);
 
-                for (int j = 0; j < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).Count(); j++)
+                for (int j = 0; j < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).Count(); j++)
                 {
                     int indexOfSecondElement = idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).ElementAt(j);
                     sum += originalDistanceMatrix[indexOfFirstElement, indexOfSecondElement];
