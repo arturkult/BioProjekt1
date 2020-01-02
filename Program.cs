@@ -447,11 +447,21 @@ namespace Projekt1
         static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix)
         {
             GuideTree guideTree = new GuideTree();
-            DoUPGMAIteration(guideTree, distanceMatrix, distanceMatrix);
+            List<List<int>> idsOfSequencesInGroups = new List<List<int>>();
+
+            for (int i = 0; i < distanceMatrix.GetLength(0); i++)
+            {
+                List<int> newList = new List<int>();
+                newList.Add(i);
+                idsOfSequencesInGroups.Add(newList);
+            }
+
+            DoUPGMAIteration(guideTree, distanceMatrix, distanceMatrix,idsOfSequencesInGroups);
             return guideTree;
         }
 
-        static void DoUPGMAIteration(GuideTree guideTree, double[,] actualDistanceMatrix, double[,] originalDistanceMatrix)
+        static void DoUPGMAIteration(GuideTree guideTree, double[,] actualDistanceMatrix,
+            double[,] originalDistanceMatrix, List<List<int>> idsOfSequencesInGroups)
         {
             (int, int) shortestDistanceValueCoordinates;
 
@@ -460,8 +470,9 @@ namespace Projekt1
                 return;
             }
 
-
             shortestDistanceValueCoordinates = FindShortestPairwiseDistance(actualDistanceMatrix);
+            idsOfSequencesInGroups = UpdateSequencesGroups(idsOfSequencesInGroups, shortestDistanceValueCoordinates);
+            actualDistanceMatrix = CreateNewDistanceMatrix(actualDistanceMatrix, idsOfSequencesInGroups, originalDistanceMatrix);
 
         }
 
@@ -485,6 +496,26 @@ namespace Projekt1
             return shortestDistanceValueCoordinates;
         }
 
+        static List<List<int>> UpdateSequencesGroups(List<List<int>> idsOfSequencesInGroups, (int, int) shortestDistanceValueCoordinates)
+        {
+            List<List<int>> newIdsOfSequencesInGroups = new List<List<int>>();
+
+            for (int i = 0; i < idsOfSequencesInGroups.Count(); i++)
+            {
+                if (i != shortestDistanceValueCoordinates.Item1 && i != shortestDistanceValueCoordinates.Item2)
+                {
+                    newIdsOfSequencesInGroups.Add(idsOfSequencesInGroups[i]);
+                }
+                else if (i == shortestDistanceValueCoordinates.Item1)
+                {
+                    newIdsOfSequencesInGroups.Add(
+                        idsOfSequencesInGroups[i].Concat(
+                            idsOfSequencesInGroups[shortestDistanceValueCoordinates.Item2]).ToList());
+                }
+            }
+            return newIdsOfSequencesInGroups;
+        }
+
         static double[,] CreateNewDistanceMatrix(double[,] actualDistanceMatrix, List<List<int>> idsOfSequencesInGroups,
             double[,] originalDistanceMatrix)
         {
@@ -495,19 +526,33 @@ namespace Projekt1
             {
                 for (int j = 0; j < i; j++)
                 {
-                    result[i, j] = CalculateDistanceForDistanceMatrixCell(actualDistanceMatrix, idsOfSequencesInGroups,
+                    result[i, j] = CalculateDistanceForDistanceMatrixCell(idsOfSequencesInGroups,
                         originalDistanceMatrix, (i,j));
                 }
             }
             return result;
         }
 
-        static double CalculateDistanceForDistanceMatrixCell(double[,] actualDistanceMatrix, List<List<int>> idsOfSequencesInGroups,
+        static double CalculateDistanceForDistanceMatrixCell(List<List<int>> idsOfSequencesInGroups,
             double[,] originalDistanceMatrix, (int, int) cellCoordinates)
         {
-            double result = 0;
+            double sum = 0;
+            int numberOfElements = 0;
 
-            return result;
+
+            for (int i = 0; i < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).Count(); i++)
+            {
+                int indexOfFirstElement = idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).ElementAt(i);
+
+                for (int j = 0; j < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).Count(); j++)
+                {
+                    int indexOfSecondElement = idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).ElementAt(j);
+                    sum += originalDistanceMatrix[indexOfFirstElement, indexOfSecondElement];
+                    numberOfElements++;
+                }
+            }
+
+            return sum / numberOfElements;
         }
     }
 }
