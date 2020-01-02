@@ -46,7 +46,7 @@ namespace Projekt1
 
                 guideTree = CreateGuideTreeWithUPGMA(CreateDistanceMatrix());
                 Console.WriteLine("Guide tree:");
-                guideTree.printTree();
+                guideTree.PrintTree();
             }
             catch (Exception e)
             {
@@ -465,21 +465,23 @@ namespace Projekt1
         static void DoUPGMAIteration(GuideTree guideTree, double[,] actualDistanceMatrix,
             double[,] originalDistanceMatrix, List<List<int>> idsOfSequencesInGroups)
         {
-            (int, int) shortestDistanceValueCoordinates;
+            (int, int, double) shortestDistanceValues;
 
             if (actualDistanceMatrix.Length <= 1)
             {
                 return;
             }
 
-            shortestDistanceValueCoordinates = FindShortestPairwiseDistance(actualDistanceMatrix);
-            idsOfSequencesInGroups = UpdateSequencesGroups(idsOfSequencesInGroups, shortestDistanceValueCoordinates);
+            shortestDistanceValues = FindShortestPairwiseDistanceCoordinatesAndValues(actualDistanceMatrix);
+            guideTree.JoinGroups(shortestDistanceValues.Item1, shortestDistanceValues.Item2, shortestDistanceValues.Item3);
+            idsOfSequencesInGroups = UpdateSequencesGroups(idsOfSequencesInGroups,
+                (shortestDistanceValues.Item1, shortestDistanceValues.Item2));
             actualDistanceMatrix = CreateNewDistanceMatrix(actualDistanceMatrix, idsOfSequencesInGroups, originalDistanceMatrix);
 
             DoUPGMAIteration(guideTree, actualDistanceMatrix, originalDistanceMatrix, idsOfSequencesInGroups);
         }
 
-        static (int, int) FindShortestPairwiseDistance(double[,] distanceMatrix)
+        static (int, int, double) FindShortestPairwiseDistanceCoordinatesAndValues(double[,] distanceMatrix)
         {
             double shortestDistanceValue = distanceMatrix[1, 0];
             (int, int) shortestDistanceValueCoordinates = (1, 0);
@@ -496,7 +498,7 @@ namespace Projekt1
                 }
             }
 
-            return shortestDistanceValueCoordinates;
+            return (shortestDistanceValueCoordinates.Item1, shortestDistanceValueCoordinates.Item2, shortestDistanceValue);
         }
 
         static List<List<int>> UpdateSequencesGroups(List<List<int>> idsOfSequencesInGroups, (int, int) shortestDistanceValueCoordinates)
