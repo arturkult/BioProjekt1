@@ -48,8 +48,11 @@ namespace Projekt1
                 }
 
                 allSequences = matrices.SelectMany(x => x).ToList();
+                PrintLegend(allSequences);
+
                 distanceMatrix = CreateDistanceMatrix(allSequences, alphabet, distances);
                 Console.WriteLine("\nDistance matrix:");
+                PrintDistances(distanceMatrix, allSequences);
 
                 guideTree = CreateGuideTreeWithUPGMA(distanceMatrix, allSequences);
                 Console.WriteLine("\nGuide tree:");
@@ -450,6 +453,37 @@ namespace Projekt1
             var secondProfile = CreateProfile(secondList, alphabet);
             //var scoreMatrix = CreateScoreMatrix(firstProfile, secondProfile, alphabet, similarity);
             return 0;
+        }
+
+        static void PrintLegend(List<string> sequences)
+        {
+            Console.WriteLine("\nLegenda:");
+            char firstAlias = 'A';
+
+            for (int i = 0; i < sequences.Count; i++)
+            {
+                Console.WriteLine((firstAlias + i) + ": " + sequences[i]);
+            }
+        }
+
+        static void PrintDistances(double[,] distanceMatrix, List<string> sequences)
+        {
+            char firstAlias = 'A';
+            Console.Write("\n\t");
+
+            for (int i = 0; i < distanceMatrix.GetLength(0); i++)
+            {
+                Console.Write((firstAlias + i) + "\t");
+            }
+
+            for (int i = 0; i < distanceMatrix.GetLength(0); i++)
+            {
+                Console.Write("\n" + (firstAlias + i) + "\t");
+                for (int j = 0; j < distanceMatrix.GetLength(0); j++)
+                {
+                    Console.Write(distanceMatrix[i, j] + "\t");
+                }
+            }
         }
 
         static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix, List<string> sequencesNames)
