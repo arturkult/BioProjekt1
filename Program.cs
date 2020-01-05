@@ -12,14 +12,17 @@ namespace Projekt1
 
             //(string matrixFileName, string[] fileNames, List<char> alphabet) = ParseArguments(args);
             string matrixFileName = "similarity.csv";
+            string distanceFileName = "distances.csv";
             string[] fileNames = new string[] { "plik2.csv", "plik1.csv" };
-            //string[] fileNames = new string[] { "plik2.csv", "plik1.csv" };
             List<char> alphabet = new List<char> { 'A', 'G', 'T', 'C', '-' };
             List<double[,]> resultProfiles = new List<double[,]>();
             List<List<char>> alphabets = new List<List<char>>();
             List<List<string>> matrices = new List<List<string>>();
-            Dictionary<(char, char), double> similarity = GetSimilarityMatrix(matrixFileName);
+            Dictionary<(char, char), double> similarity = GetMatrix(matrixFileName);
+            Dictionary<(char, char), double> distances = GetMatrix(distanceFileName);
             GuideTree guideTree;
+            List<string> allSequences;
+            double[,] distanceMatrix;
 
             try
             {
@@ -30,7 +33,7 @@ namespace Projekt1
                     resultProfiles.Add(profile);
                     PrintProfileMatrix(profile, alphabet);
                     var consensusWord = CreateConsensusWord(profile, alphabet);
-                    Console.WriteLine($"Słowo konsensusowe: {consensusWord}");
+                    Console.WriteLine($"/nSłowo konsensusowe: {consensusWord}");
                 }
                 var concatenated = ConcatSequences(resultProfiles.First(),
                                 resultProfiles.Last(),
@@ -38,13 +41,17 @@ namespace Projekt1
                                 matrices.Last().Select(s => s.ToCharArray()).ToArray(),
                                 alphabet,
                                 similarity);
-                Console.WriteLine("Złożenie wielodopasowań");
+                Console.WriteLine("/nZłożenie wielodopasowań");
                 foreach (var s in concatenated)
                 {
                     Console.WriteLine(s);
                 }
 
-                guideTree = CreateGuideTreeWithUPGMA(CreateDistanceMatrix(matrices, alphabet), new List<string> { "A", "B", "C", "D", "E", "F", "G"});
+                allSequences = matrices.SelectMany(x => x).ToList();
+                distanceMatrix = CreateDistanceMatrix(allSequences, alphabet, distances);
+                Console.WriteLine("\nDistance matrix:");
+
+                guideTree = CreateGuideTreeWithUPGMA(distanceMatrix, allSequences);
                 Console.WriteLine("\nGuide tree:");
                 guideTree.PrintTree();
             }
@@ -83,7 +90,7 @@ namespace Projekt1
             return (matrixFileName, fileNames, alphabet);
         }
 
-        private static Dictionary<(char, char), double> GetSimilarityMatrix(string fileName)
+        private static Dictionary<(char, char), double> GetMatrix(string fileName)
         {
             if (!File.Exists(fileName))
             {
@@ -119,12 +126,12 @@ namespace Projekt1
             int i = profile1.GetLength(1);
             int j = profile2.GetLength(1);
             var scoreMatrix = CreateScoreMatrix(profile1, profile2, alphabet, similarity);
-            PrintScoreMatrix(scoreMatrix.Item2);
+            PrintScoreMatrix(scoreMatrix);
             while(i>0 || j > 0)
             {
                 var newi = i;
                 var newj = j;
-                switch (scoreMatrix.Item2[i, j])
+                switch (scoreMatrix[i, j])
                 {
                     case 'C':
                         newi -= 1;
@@ -151,34 +158,6 @@ namespace Projekt1
             return result;
         }
 
-        /* double GetSimilarity(profile p1, profile p2, int i, int j, matrix similarityMatrix)
-         * suma wg wzoru ktory rozpisalem
-         * 
-         * matrix computeAllignment(profile p1, profile p2, matrix similarityMatrix)
-         * matrix allignmentMatrix = new matrix(p1.Length +1, p2.Length+1)
-         * 0,0 = jest 0
-         * for (auto i =1; i <allignmentMatrix.X; i++)
-         * {
-         * allignmentMatrix(i,0) = alignmentMatrix(i-1,0) + GetSimilarity(p1(i), '-')
-         * }
-         * for (auto i =1; i <allignmentMatrix.Y; i++)
-         * {
-         * allignmentMatrix(0,i) = alignmentMatrix(0,j-1) + GetSimilarity(p2(i), '-')
-         * }
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * */
-
         private static void PrintScoreMatrix(double[,] matrix)
         {
             Console.WriteLine("Score Matrix:");
@@ -204,7 +183,7 @@ namespace Projekt1
             }
         }
 
-        private static (double[,], char[,]) CreateScoreMatrix(
+        private static char[,] CreateScoreMatrix(
             double[,] profile1,
             double[,] profile2,
             List<char> alphabet,
@@ -280,7 +259,7 @@ namespace Projekt1
                     }
                 }
             }
-            return (matrix,result);
+            return result;
         }
 
         private static double Calculate(double[,] profile1,
@@ -418,7 +397,7 @@ namespace Projekt1
             }
         }
 
-        static double[,] CreateDistanceMatrix(List<List<string>> sequences, List<char> alphabet)
+        static double[,] CreateDistanceMatrix(List<string> sequences, List<char> alphabet, Dictionary<(char, char), double> distances)
         {
             // do celow testowych
             //var result = new double[7, 7];
@@ -446,20 +425,30 @@ namespace Projekt1
             //return result;
 
 
+            //var sequences = fileSequences.SelectMany(x => x).ToList();
             var result = new double[sequences.Count, sequences.Count];
+            
 
             for (int i = 0; i < sequences.Count; i++)
             {
                 for (int j = 0; j < i; i++)
                 {
-                    CountDistanceMatrixCellValue(sequences[i], sequences[j], alphabet);
+                    CountDistanceMatrixCellValue(sequences[i], sequences[j], alphabet, distances);
                 }
             }
             return result;
         }
 
-        static double CountDistanceMatrixCellValue(List<string> firstSequence, List<string> secondSequence, List<char> alphabet)
+        static double CountDistanceMatrixCellValue(string firstSequence, string secondSequence,
+            List<char> alphabet, Dictionary<(char, char), double> distances)
         {
+            List<string> firstList = new List<string>();
+            firstList.Add(firstSequence);
+            List<string> secondList = new List<string>();
+            secondList.Add(secondSequence);
+            var firstProfile = CreateProfile(firstList, alphabet);
+            var secondProfile = CreateProfile(secondList, alphabet);
+            //var scoreMatrix = CreateScoreMatrix(firstProfile, secondProfile, alphabet, similarity);
             return 0;
         }
 
