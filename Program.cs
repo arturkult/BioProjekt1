@@ -44,7 +44,7 @@ namespace Projekt1
                     Console.WriteLine(s);
                 }
 
-                guideTree = CreateGuideTreeWithUPGMA(CreateDistanceMatrix(), new List<string> { "A", "B", "C", "D", "E", "F", "G"});
+                guideTree = CreateGuideTreeWithUPGMA(CreateDistanceMatrix(matrices, alphabet), new List<string> { "A", "B", "C", "D", "E", "F", "G"});
                 Console.WriteLine("\nGuide tree:");
                 guideTree.PrintTree();
             }
@@ -119,12 +119,12 @@ namespace Projekt1
             int i = profile1.GetLength(1);
             int j = profile2.GetLength(1);
             var scoreMatrix = CreateScoreMatrix(profile1, profile2, alphabet, similarity);
-            PrintScoreMatrix(scoreMatrix);
+            PrintScoreMatrix(scoreMatrix.Item2);
             while(i>0 || j > 0)
             {
                 var newi = i;
                 var newj = j;
-                switch (scoreMatrix[i, j])
+                switch (scoreMatrix.Item2[i, j])
                 {
                     case 'C':
                         newi -= 1;
@@ -204,7 +204,7 @@ namespace Projekt1
             }
         }
 
-        private static char[,] CreateScoreMatrix(
+        private static (double[,], char[,]) CreateScoreMatrix(
             double[,] profile1,
             double[,] profile2,
             List<char> alphabet,
@@ -280,7 +280,7 @@ namespace Projekt1
                     }
                 }
             }
-            return result;
+            return (matrix,result);
         }
 
         private static double Calculate(double[,] profile1,
@@ -418,32 +418,49 @@ namespace Projekt1
             }
         }
 
-        static double[,] CreateDistanceMatrix()
+        static double[,] CreateDistanceMatrix(List<List<string>> sequences, List<char> alphabet)
         {
             // do celow testowych
-            var result = new double[7, 7];
-            result[1, 0] = 19;
-            result[2, 0] = 27;
-            result[2, 1] = 31;
-            result[3, 0] = 8;
-            result[3, 1] = 18;
-            result[3, 2] = 26;
-            result[4, 0] = 33;
-            result[4, 1] = 36;
-            result[4, 2] = 41;
-            result[4, 3] = 31;
-            result[5, 0] = 18;
-            result[5, 1] = 1;
-            result[5, 2] = 32;
-            result[5, 3] = 17;
-            result[5, 4] = 35;
-            result[6, 0] = 13;
-            result[6, 1] = 13;
-            result[6, 2] = 29;
-            result[6, 3] = 14;
-            result[6, 4] = 28;
-            result[6, 5] = 12;
+            //var result = new double[7, 7];
+            //result[1, 0] = 19;
+            //result[2, 0] = 27;
+            //result[2, 1] = 31;
+            //result[3, 0] = 8;
+            //result[3, 1] = 18;
+            //result[3, 2] = 26;
+            //result[4, 0] = 33;
+            //result[4, 1] = 36;
+            //result[4, 2] = 41;
+            //result[4, 3] = 31;
+            //result[5, 0] = 18;
+            //result[5, 1] = 1;
+            //result[5, 2] = 32;
+            //result[5, 3] = 17;
+            //result[5, 4] = 35;
+            //result[6, 0] = 13;
+            //result[6, 1] = 13;
+            //result[6, 2] = 29;
+            //result[6, 3] = 14;
+            //result[6, 4] = 28;
+            //result[6, 5] = 12;
+            //return result;
+
+
+            var result = new double[sequences.Count, sequences.Count];
+
+            for (int i = 0; i < sequences.Count; i++)
+            {
+                for (int j = 0; j < i; i++)
+                {
+                    CountDistanceMatrixCellValue(sequences[i], sequences[j], alphabet);
+                }
+            }
             return result;
+        }
+
+        static double CountDistanceMatrixCellValue(List<string> firstSequence, List<string> secondSequence, List<char> alphabet)
+        {
+            return 0;
         }
 
         static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix, List<string> sequencesNames)
