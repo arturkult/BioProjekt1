@@ -402,41 +402,13 @@ namespace Projekt1
 
         static double[,] CreateDistanceMatrix(List<string> sequences, List<char> alphabet, Dictionary<(char, char), double> distances)
         {
-            // do celow testowych
-            //var result = new double[7, 7];
-            //result[1, 0] = 19;
-            //result[2, 0] = 27;
-            //result[2, 1] = 31;
-            //result[3, 0] = 8;
-            //result[3, 1] = 18;
-            //result[3, 2] = 26;
-            //result[4, 0] = 33;
-            //result[4, 1] = 36;
-            //result[4, 2] = 41;
-            //result[4, 3] = 31;
-            //result[5, 0] = 18;
-            //result[5, 1] = 1;
-            //result[5, 2] = 32;
-            //result[5, 3] = 17;
-            //result[5, 4] = 35;
-            //result[6, 0] = 13;
-            //result[6, 1] = 13;
-            //result[6, 2] = 29;
-            //result[6, 3] = 14;
-            //result[6, 4] = 28;
-            //result[6, 5] = 12;
-            //return result;
-
-
-            //var sequences = fileSequences.SelectMany(x => x).ToList();
             var result = new double[sequences.Count, sequences.Count];
             
-
             for (int i = 0; i < sequences.Count; i++)
             {
-                for (int j = 0; j < i; i++)
+                for (int j = 0; j < i; j++)
                 {
-                    CountDistanceMatrixCellValue(sequences[i], sequences[j], alphabet, distances);
+                    result[i,j] = CountDistanceMatrixCellValue(sequences[i], sequences[j], alphabet, distances);
                 }
             }
             return result;
@@ -445,14 +417,40 @@ namespace Projekt1
         static double CountDistanceMatrixCellValue(string firstSequence, string secondSequence,
             List<char> alphabet, Dictionary<(char, char), double> distances)
         {
-            List<string> firstList = new List<string>();
-            firstList.Add(firstSequence);
-            List<string> secondList = new List<string>();
-            secondList.Add(secondSequence);
-            var firstProfile = CreateProfile(firstList, alphabet);
-            var secondProfile = CreateProfile(secondList, alphabet);
-            //var scoreMatrix = CreateScoreMatrix(firstProfile, secondProfile, alphabet, similarity);
-            return 0;
+            secondSequence = "writers";
+            firstSequence = "vintner";
+            double[,] valueMatrix = new double[firstSequence.Length + 1, secondSequence.Length + 1];
+            List<double> results;
+            double increase;
+
+            valueMatrix[0, 0] = 0;
+
+            for (int i = 0; i <= firstSequence.Length; i++)
+            {
+                valueMatrix[i, 0] = i;
+            }
+
+            for (int i = 0; i <= secondSequence.Length; i++)
+            {
+                valueMatrix[0, i] = i;
+            }
+
+            for (int i = 1; i <= firstSequence.Length; i++)
+            {
+                for (int j = 1; j <= secondSequence.Length; j++)
+                {
+                    results = new List<double>();
+
+                    increase = firstSequence.ElementAt(i - 1) == secondSequence.ElementAt(j - 1) ? 0 : 1;
+                    results.Add(valueMatrix[i - 1, j - 1] + increase);
+                    results.Add(valueMatrix[i - 1, j] + 1);
+                    results.Add(valueMatrix[i, j - 1] + 1);
+                    
+                    valueMatrix[i, j] = results.Min();
+                } 
+            }
+
+            return valueMatrix[firstSequence.Length, secondSequence.Length];
         }
 
         static void PrintLegend(List<string> sequences)
@@ -462,7 +460,7 @@ namespace Projekt1
 
             for (int i = 0; i < sequences.Count; i++)
             {
-                Console.WriteLine((firstAlias + i) + ": " + sequences[i]);
+                Console.WriteLine((char)(firstAlias + i) + ": " + sequences[i]);
             }
         }
 
@@ -473,17 +471,18 @@ namespace Projekt1
 
             for (int i = 0; i < distanceMatrix.GetLength(0); i++)
             {
-                Console.Write((firstAlias + i) + "\t");
+                Console.Write((char)(firstAlias + i) + "\t");
             }
 
             for (int i = 0; i < distanceMatrix.GetLength(0); i++)
             {
-                Console.Write("\n" + (firstAlias + i) + "\t");
-                for (int j = 0; j < distanceMatrix.GetLength(0); j++)
+                Console.Write("\n" + (char)(firstAlias + i) + "\t");
+                for (int j = 0; j < i; j++)
                 {
                     Console.Write(distanceMatrix[i, j] + "\t");
                 }
             }
+            Console.WriteLine();
         }
 
         static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix, List<string> sequencesNames)
