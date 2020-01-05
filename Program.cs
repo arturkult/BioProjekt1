@@ -33,7 +33,7 @@ namespace Projekt1
                     resultProfiles.Add(profile);
                     PrintProfileMatrix(profile, alphabet);
                     var consensusWord = CreateConsensusWord(profile, alphabet);
-                    Console.WriteLine($"/nSłowo konsensusowe: {consensusWord}");
+                    Console.WriteLine($"\nSłowo konsensusowe: {consensusWord}");
                 }
                 var concatenated = ConcatSequences(resultProfiles.First(),
                                 resultProfiles.Last(),
@@ -41,7 +41,7 @@ namespace Projekt1
                                 matrices.Last().Select(s => s.ToCharArray()).ToArray(),
                                 alphabet,
                                 similarity);
-                Console.WriteLine("/nZłożenie wielodopasowań");
+                Console.WriteLine("\nZłożenie wielodopasowań");
                 foreach (var s in concatenated)
                 {
                     Console.WriteLine(s);
@@ -52,7 +52,7 @@ namespace Projekt1
 
                 distanceMatrix = CreateDistanceMatrix(allSequences, alphabet, distances);
                 Console.WriteLine("\nDistance matrix:");
-                PrintDistances(distanceMatrix, allSequences);
+                PrintDistances(distanceMatrix);
 
                 guideTree = CreateGuideTreeWithUPGMA(distanceMatrix, allSequences);
                 Console.WriteLine("\nGuide tree:");
@@ -417,8 +417,6 @@ namespace Projekt1
         static double CountDistanceMatrixCellValue(string firstSequence, string secondSequence,
             List<char> alphabet, Dictionary<(char, char), double> distances)
         {
-            secondSequence = "writers";
-            firstSequence = "vintner";
             double[,] valueMatrix = new double[firstSequence.Length + 1, secondSequence.Length + 1];
             List<double> results;
             double increase;
@@ -441,7 +439,7 @@ namespace Projekt1
                 {
                     results = new List<double>();
 
-                    increase = firstSequence.ElementAt(i - 1) == secondSequence.ElementAt(j - 1) ? 0 : 1;
+                    increase = distances[(firstSequence.ElementAt(i - 1), secondSequence.ElementAt(j - 1))];
                     results.Add(valueMatrix[i - 1, j - 1] + increase);
                     results.Add(valueMatrix[i - 1, j] + 1);
                     results.Add(valueMatrix[i, j - 1] + 1);
@@ -464,10 +462,10 @@ namespace Projekt1
             }
         }
 
-        static void PrintDistances(double[,] distanceMatrix, List<string> sequences)
+        static void PrintDistances(double[,] distanceMatrix)
         {
             char firstAlias = 'A';
-            Console.Write("\n\t");
+            Console.Write("\t");
 
             for (int i = 0; i < distanceMatrix.GetLength(0); i++)
             {
