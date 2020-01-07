@@ -9,16 +9,19 @@ namespace Projekt1
     {
         static void Main(string[] args)
         {
-
             //(string matrixFileName, string[] fileNames, List<char> alphabet) = ParseArguments(args);
             string matrixFileName = "similarity.csv";
+            string distanceFileName = "distances.csv";
             string[] fileNames = new string[] { "plik2.csv", "plik1.csv" };
-            //string[] fileNames = new string[] { "plik2.csv", "plik1.csv" };
             List<char> alphabet = new List<char> { 'A', 'G', 'T', 'C', '-' };
             List<double[,]> resultProfiles = new List<double[,]>();
             List<List<char>> alphabets = new List<List<char>>();
             List<List<string>> matrices = new List<List<string>>();
-            Dictionary<(char, char), double> similarity = GetSimilarityMatrix(matrixFileName);
+            Dictionary<(char, char), double> similarity = GetMatrix(matrixFileName);
+            Dictionary<(char, char), double> distances = GetMatrix(distanceFileName);
+            GuideTree guideTree;
+            List<string> allSequences;
+            double[,] distanceMatrix;
 
             try
             {
@@ -29,7 +32,7 @@ namespace Projekt1
                     resultProfiles.Add(profile);
                     PrintProfileMatrix(profile, alphabet);
                     var consensusWord = CreateConsensusWord(profile, alphabet);
-                    Console.WriteLine($"Słowo konsensusowe: {consensusWord}");
+                    Console.WriteLine($"\nSłowo konsensusowe: {consensusWord}");
                 }
                 var concatenated = ConcatSequences(resultProfiles.First(),
                                 resultProfiles.Last(),
@@ -37,12 +40,31 @@ namespace Projekt1
                                 matrices.Last().Select(s => s.ToCharArray()).ToArray(),
                                 alphabet,
                                 similarity);
-                Console.WriteLine("Złożenie wielodopasowań");
+                Console.WriteLine("\nZłożenie wielodopasowań");
                 foreach (var s in concatenated)
                 {
                     Console.WriteLine(s);
                 }
+
+                allSequences = matrices.SelectMany(x => x).ToList();
+                PrintLegend(allSequences);
+
+                distanceMatrix = CreateDistanceMatrix(allSequences, distances);
+                Console.WriteLine("\nDistance matrix:");
+                PrintDistances(distanceMatrix);
+
+                guideTree = CreateGuideTreeWithUPGMA(distanceMatrix, allSequences);
+                Console.WriteLine("\nGuide tree:");
+                guideTree.PrintTree();
+
+                var treeRootNodeAlligments = GetAlligmentsFromRootNode(guideTree.rootNode, alphabet, similarity);
+                Console.WriteLine("\nZłożenie wielodopasowań");
+                foreach (var alligment in treeRootNodeAlligments)
+                {
+                    Console.WriteLine(alligment);
+                }
             }
+
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
@@ -78,7 +100,7 @@ namespace Projekt1
             return (matrixFileName, fileNames, alphabet);
         }
 
-        private static Dictionary<(char, char), double> GetSimilarityMatrix(string fileName)
+        private static Dictionary<(char, char), double> GetMatrix(string fileName)
         {
             if (!File.Exists(fileName))
             {
@@ -107,14 +129,20 @@ namespace Projekt1
                                                 char[][] multi1,
                                                 char[][] multi2,
                                                 List<char> alphabet,
-                                                Dictionary<(char, char), double> similarity)
+                                                Dictionary<(char, char), double> similarity,
+                                                bool scoreMatrixShouldBePrinted = true)
         {
             var result_length = multi1.Length + multi2.Length;
             var result = Enumerable.Repeat(string.Empty, result_length).ToArray();
             int i = profile1.GetLength(1);
             int j = profile2.GetLength(1);
             var scoreMatrix = CreateScoreMatrix(profile1, profile2, alphabet, similarity);
-            PrintScoreMatrix(scoreMatrix);
+
+            if (scoreMatrixShouldBePrinted)
+            {
+                PrintScoreMatrix(scoreMatrix);
+            }
+            
             while(i>0 || j > 0)
             {
                 var newi = i;
@@ -145,34 +173,6 @@ namespace Projekt1
             }
             return result;
         }
-
-        /* double GetSimilarity(profile p1, profile p2, int i, int j, matrix similarityMatrix)
-         * suma wg wzoru ktory rozpisalem
-         * 
-         * matrix computeAllignment(profile p1, profile p2, matrix similarityMatrix)
-         * matrix allignmentMatrix = new matrix(p1.Length +1, p2.Length+1)
-         * 0,0 = jest 0
-         * for (auto i =1; i <allignmentMatrix.X; i++)
-         * {
-         * allignmentMatrix(i,0) = alignmentMatrix(i-1,0) + GetSimilarity(p1(i), '-')
-         * }
-         * for (auto i =1; i <allignmentMatrix.Y; i++)
-         * {
-         * allignmentMatrix(0,i) = alignmentMatrix(0,j-1) + GetSimilarity(p2(i), '-')
-         * }
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * 
-         * */
 
         private static void PrintScoreMatrix(double[,] matrix)
         {
@@ -411,6 +411,248 @@ namespace Projekt1
                 }
                 Console.Write("\n");
             }
+        }
+
+        static double[,] CreateDistanceMatrix(List<string> sequences, Dictionary<(char, char), double> distances)
+        {
+            var result = new double[sequences.Count, sequences.Count];
+            
+            for (int i = 0; i < sequences.Count; i++)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    result[i,j] = CountDistanceMatrixCellValue(sequences[i], sequences[j], distances);
+                }
+            }
+            return result;
+        }
+
+        static double CountDistanceMatrixCellValue(string firstSequence, string secondSequence,
+            Dictionary<(char, char), double> distances)
+        {
+            double[,] valueMatrix = new double[firstSequence.Length + 1, secondSequence.Length + 1];
+            List<double> results;
+            double increase;
+
+            valueMatrix[0, 0] = 0;
+
+            for (int i = 0; i <= firstSequence.Length; i++)
+            {
+                valueMatrix[i, 0] = i;
+            }
+
+            for (int i = 0; i <= secondSequence.Length; i++)
+            {
+                valueMatrix[0, i] = i;
+            }
+
+            for (int i = 1; i <= firstSequence.Length; i++)
+            {
+                for (int j = 1; j <= secondSequence.Length; j++)
+                {
+                    results = new List<double>();
+
+                    increase = distances[(firstSequence.ElementAt(i - 1), secondSequence.ElementAt(j - 1))];
+                    results.Add(valueMatrix[i - 1, j - 1] + increase);
+                    results.Add(valueMatrix[i - 1, j] + 1);
+                    results.Add(valueMatrix[i, j - 1] + 1);
+                    
+                    valueMatrix[i, j] = results.Min();
+                } 
+            }
+
+            return valueMatrix[firstSequence.Length, secondSequence.Length];
+        }
+
+        static void PrintLegend(List<string> sequences)
+        {
+            Console.WriteLine("\nLegenda:");
+            char firstAlias = 'A';
+
+            for (int i = 0; i < sequences.Count; i++)
+            {
+                Console.WriteLine((char)(firstAlias + i) + ": " + sequences[i]);
+            }
+        }
+
+        static void PrintDistances(double[,] distanceMatrix)
+        {
+            char firstAlias = 'A';
+            Console.Write("\t");
+
+            for (int i = 0; i < distanceMatrix.GetLength(0); i++)
+            {
+                Console.Write((char)(firstAlias + i) + "\t");
+            }
+
+            for (int i = 0; i < distanceMatrix.GetLength(0); i++)
+            {
+                Console.Write("\n" + (char)(firstAlias + i) + "\t");
+                for (int j = 0; j < i; j++)
+                {
+                    Console.Write(distanceMatrix[i, j] + "\t");
+                }
+            }
+            Console.WriteLine();
+        }
+
+        static GuideTree CreateGuideTreeWithUPGMA(double[,] distanceMatrix, List<string> sequencesNames)
+        {
+            GuideTree guideTree = new GuideTree(InitializeGuideTreeGroups(sequencesNames));
+            List<List<int>> idsOfSequencesInGroups = new List<List<int>>();
+
+            for (int i = 0; i < distanceMatrix.GetLength(0); i++)
+            {
+                List<int> newList = new List<int>();
+                newList.Add(i);
+                idsOfSequencesInGroups.Add(newList);
+            }
+
+            DoUPGMAIteration(guideTree, distanceMatrix, distanceMatrix,idsOfSequencesInGroups);
+            return guideTree;
+        }
+
+        static List<GuideTreeNode> InitializeGuideTreeGroups(List<string> sequencesNames)
+        {
+            List<GuideTreeNode> result = new List<GuideTreeNode>();
+
+            for (int i = 0; i < sequencesNames.Count; i++)
+            {
+                result.Add(new GuideTreeNode(0, 0, null, null, sequencesNames[i]));
+            }
+
+            return result;
+        }
+
+        static void DoUPGMAIteration(GuideTree guideTree, double[,] actualDistanceMatrix,
+            double[,] originalDistanceMatrix, List<List<int>> idsOfSequencesInGroups)
+        {
+            (int, int, double) shortestDistanceValues;
+
+            if (actualDistanceMatrix.Length <= 1)
+            {
+                return;
+            }
+
+            shortestDistanceValues = FindShortestPairwiseDistanceCoordinatesAndValues(actualDistanceMatrix);
+            guideTree.JoinGroups(shortestDistanceValues.Item1, shortestDistanceValues.Item2, shortestDistanceValues.Item3);
+            idsOfSequencesInGroups = UpdateSequencesGroups(idsOfSequencesInGroups,
+                (shortestDistanceValues.Item1, shortestDistanceValues.Item2));
+            actualDistanceMatrix = CreateNewDistanceMatrix(actualDistanceMatrix, idsOfSequencesInGroups, originalDistanceMatrix);
+
+            DoUPGMAIteration(guideTree, actualDistanceMatrix, originalDistanceMatrix, idsOfSequencesInGroups);
+        }
+
+        static (int, int, double) FindShortestPairwiseDistanceCoordinatesAndValues(double[,] distanceMatrix)
+        {
+            double shortestDistanceValue = distanceMatrix[1, 0];
+            (int, int) shortestDistanceValueCoordinates = (1, 0);
+
+            for (int i = 0; i < distanceMatrix.GetLength(0); i++)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    if (distanceMatrix[i, j] < shortestDistanceValue)
+                    {
+                        shortestDistanceValue = distanceMatrix[i, j];
+                        shortestDistanceValueCoordinates = (i, j);
+                    }
+                }
+            }
+
+            return (shortestDistanceValueCoordinates.Item1, shortestDistanceValueCoordinates.Item2, shortestDistanceValue);
+        }
+
+        static List<List<int>> UpdateSequencesGroups(List<List<int>> idsOfSequencesInGroups, (int, int) shortestDistanceValueCoordinates)
+        {
+            List<List<int>> newIdsOfSequencesInGroups = new List<List<int>>();
+            int idOfLowerCoordinate = shortestDistanceValueCoordinates.Item2 >= shortestDistanceValueCoordinates.Item1 ?
+                shortestDistanceValueCoordinates.Item1 : shortestDistanceValueCoordinates.Item2;
+            int idOfGreaterCoordinate = shortestDistanceValueCoordinates.Item1 == idOfLowerCoordinate ?
+                shortestDistanceValueCoordinates.Item2 : shortestDistanceValueCoordinates.Item1;
+
+            for (int i = 0; i < idsOfSequencesInGroups.Count; i++)
+            {
+                if (i != shortestDistanceValueCoordinates.Item1 && i != shortestDistanceValueCoordinates.Item2)
+                {
+                    newIdsOfSequencesInGroups.Add(idsOfSequencesInGroups[i]);
+                }
+                else if (i == idOfLowerCoordinate)
+                {
+                    newIdsOfSequencesInGroups.Add(
+                        idsOfSequencesInGroups[i].Concat(
+                            idsOfSequencesInGroups[idOfGreaterCoordinate]).ToList());
+                }
+            }
+
+            return newIdsOfSequencesInGroups;
+        }
+
+        static double[,] CreateNewDistanceMatrix(double[,] actualDistanceMatrix, List<List<int>> idsOfSequencesInGroups,
+            double[,] originalDistanceMatrix)
+        {
+            int newLength = actualDistanceMatrix.GetLength(0) - 1;
+            double[,] result = new double[newLength, newLength];
+
+            for (int i = 0; i < newLength; i++)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    result[i, j] = CalculateValueForDistanceMatrixCell(idsOfSequencesInGroups,
+                        originalDistanceMatrix, (i,j));
+                }
+            }
+
+            return result;
+        }
+
+        static double CalculateValueForDistanceMatrixCell(List<List<int>> idsOfSequencesInGroups,
+            double[,] originalDistanceMatrix, (int, int) cellCoordinates)
+        {
+            double sum = 0;
+            int numberOfElements = 0;
+
+
+            for (int i = 0; i < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).Count; i++)
+            {
+                int indexOfFirstElement = idsOfSequencesInGroups.ElementAt(cellCoordinates.Item1).ElementAt(i);
+
+                for (int j = 0; j < idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).Count; j++)
+                {
+                    int indexOfSecondElement = idsOfSequencesInGroups.ElementAt(cellCoordinates.Item2).ElementAt(j);
+                    sum += indexOfFirstElement > indexOfSecondElement ?
+                        originalDistanceMatrix[indexOfFirstElement, indexOfSecondElement] :
+                        originalDistanceMatrix[indexOfSecondElement, indexOfFirstElement];
+                    numberOfElements++;
+                }
+            }
+
+            return sum / numberOfElements;
+        }
+
+        static List<string> GetAlligmentsFromRootNode(GuideTreeNode guideTreeNode, List<char> alphabet, Dictionary<(char, char), double> similarity)
+        {
+            if (guideTreeNode.rightChild == null && guideTreeNode.leftChild == null)
+            {
+                List<string> result = new List<string>();
+                result.Add(guideTreeNode.name);
+                return result;
+            }
+
+            List<string> alligmentsFromLeftChild = GetAlligmentsFromRootNode(guideTreeNode.leftChild, alphabet, similarity);
+            List<string> alligmentsFromRightChild = GetAlligmentsFromRootNode(guideTreeNode.rightChild, alphabet, similarity);
+
+            return guideTreeNode.alligments = SetAlligmentForTreeNode(alligmentsFromLeftChild, alligmentsFromRightChild, alphabet, similarity);
+        }
+
+        static List<string> SetAlligmentForTreeNode(List<string> leftSubtreeAlligments, List<string> rightSubtreeAlligments,
+            List<char> alphabet, Dictionary<(char, char), double> similarity)
+        {
+            double[,] firstProfile = CreateProfile(leftSubtreeAlligments, alphabet);
+            double[,] secondProfile = CreateProfile(rightSubtreeAlligments, alphabet);
+            var multi1 = leftSubtreeAlligments.ToArray().Select(x => x.ToCharArray()).ToArray();
+            var multi2 = rightSubtreeAlligments.ToArray().Select(x => x.ToCharArray()).ToArray();
+            return ConcatSequences(firstProfile, secondProfile, multi1, multi2, alphabet, similarity, false).ToList();
         }
     }
 }
