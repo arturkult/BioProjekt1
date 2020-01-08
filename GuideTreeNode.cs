@@ -8,7 +8,7 @@ namespace Projekt1
         public double distanceToRightChild;
         public GuideTreeNode leftChild;
         public GuideTreeNode rightChild;
-        public List<string> alligment;
+        public List<string> alligments;
         public string name;
 
         public GuideTreeNode(double distanceToLeftChild, double distanceToRightChild, GuideTreeNode leftChild,
@@ -31,7 +31,17 @@ namespace Projekt1
                 return result;
             }
 
-            return alligment;
+            return alligments;
+        }
+
+        public void PrintAlligments()
+        {
+            Console.WriteLine();
+
+            foreach (var alligment in alligments)
+            {
+                Console.WriteLine(alligment);
+            }
         }
     }
 }

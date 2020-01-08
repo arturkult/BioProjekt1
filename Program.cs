@@ -57,7 +57,12 @@ namespace Projekt1
                 Console.WriteLine("\nGuide tree:");
                 guideTree.PrintTree();
 
-                testAliligments(alphabet, similarity);
+                var treeRootNodeAlligments = GetAlligmentsFromRootNode(guideTree.rootNode, alphabet, similarity);
+                Console.WriteLine("\nZłożenie wielodopasowań");
+                foreach (var alligment in treeRootNodeAlligments)
+                {
+                    Console.WriteLine(alligment);
+                }
             }
 
             catch (Exception e)
@@ -625,24 +630,29 @@ namespace Projekt1
             return sum / numberOfElements;
         }
 
-        static void testAliligments(List<char> alphabet, Dictionary<(char, char), double> similarity)
+        static List<string> GetAlligmentsFromRootNode(GuideTreeNode guideTreeNode, List<char> alphabet, Dictionary<(char, char), double> similarity)
         {
-            List<string> firstList = new List<string>();
-            List<string> secondList = new List<string>();
-
-            firstList.Add("AGCA");
-            firstList.Add("CGGC");
-            secondList.Add("AGAGA");
-
-            double[,] firstProfile = CreateProfile(firstList, alphabet);
-            double[,] secondProfile = CreateProfile(secondList, alphabet);
-            var multi1 = firstList.ToArray().Select(x => x.ToCharArray()).ToArray();
-            var multi2 = secondList.ToArray().Select(x => x.ToCharArray()).ToArray();
-            var result = ConcatSequences(firstProfile, secondProfile, multi1, multi2, alphabet, similarity, false);
-
-            foreach (var x in result) {
-                Console.WriteLine(x);
+            if (guideTreeNode.rightChild == null && guideTreeNode.leftChild == null)
+            {
+                List<string> result = new List<string>();
+                result.Add(guideTreeNode.name);
+                return result;
             }
+
+            List<string> alligmentsFromLeftChild = GetAlligmentsFromRootNode(guideTreeNode.leftChild, alphabet, similarity);
+            List<string> alligmentsFromRightChild = GetAlligmentsFromRootNode(guideTreeNode.rightChild, alphabet, similarity);
+
+            return guideTreeNode.alligments = SetAlligmentForTreeNode(alligmentsFromLeftChild, alligmentsFromRightChild, alphabet, similarity);
+        }
+
+        static List<string> SetAlligmentForTreeNode(List<string> leftSubtreeAlligments, List<string> rightSubtreeAlligments,
+            List<char> alphabet, Dictionary<(char, char), double> similarity)
+        {
+            double[,] firstProfile = CreateProfile(leftSubtreeAlligments, alphabet);
+            double[,] secondProfile = CreateProfile(rightSubtreeAlligments, alphabet);
+            var multi1 = leftSubtreeAlligments.ToArray().Select(x => x.ToCharArray()).ToArray();
+            var multi2 = rightSubtreeAlligments.ToArray().Select(x => x.ToCharArray()).ToArray();
+            return ConcatSequences(firstProfile, secondProfile, multi1, multi2, alphabet, similarity, false).ToList();
         }
     }
 }
