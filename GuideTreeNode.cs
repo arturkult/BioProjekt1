@@ -21,19 +21,6 @@ namespace Projekt1
             this.name = name;
         }
 
-
-        public List<string> GetCurrentAlligment()
-        {
-            if (leftChild == null && rightChild == null)
-            {
-                List<string> result = new List<string>();
-                result.Add(name);
-                return result;
-            }
-
-            return alligments;
-        }
-
         public void PrintAlligments()
         {
             Console.WriteLine();
