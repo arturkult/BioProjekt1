@@ -9,7 +9,6 @@ namespace Projekt1
     {
         static void Main(string[] args)
         {
-
             //(string matrixFileName, string[] fileNames, List<char> alphabet) = ParseArguments(args);
             string matrixFileName = "similarity.csv";
             string distanceFileName = "distances.csv";
@@ -50,14 +49,17 @@ namespace Projekt1
                 allSequences = matrices.SelectMany(x => x).ToList();
                 PrintLegend(allSequences);
 
-                distanceMatrix = CreateDistanceMatrix(allSequences, alphabet, distances);
+                distanceMatrix = CreateDistanceMatrix(allSequences, distances);
                 Console.WriteLine("\nDistance matrix:");
                 PrintDistances(distanceMatrix);
 
                 guideTree = CreateGuideTreeWithUPGMA(distanceMatrix, allSequences);
                 Console.WriteLine("\nGuide tree:");
                 guideTree.PrintTree();
+
+                testAliligments(alphabet, similarity);
             }
+
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
@@ -122,14 +124,20 @@ namespace Projekt1
                                                 char[][] multi1,
                                                 char[][] multi2,
                                                 List<char> alphabet,
-                                                Dictionary<(char, char), double> similarity)
+                                                Dictionary<(char, char), double> similarity,
+                                                bool scoreMatrixShouldBePrinted = true)
         {
             var result_length = multi1.Length + multi2.Length;
             var result = Enumerable.Repeat(string.Empty, result_length).ToArray();
             int i = profile1.GetLength(1);
             int j = profile2.GetLength(1);
             var scoreMatrix = CreateScoreMatrix(profile1, profile2, alphabet, similarity);
-            PrintScoreMatrix(scoreMatrix);
+
+            if (scoreMatrixShouldBePrinted)
+            {
+                PrintScoreMatrix(scoreMatrix);
+            }
+            
             while(i>0 || j > 0)
             {
                 var newi = i;
@@ -400,7 +408,7 @@ namespace Projekt1
             }
         }
 
-        static double[,] CreateDistanceMatrix(List<string> sequences, List<char> alphabet, Dictionary<(char, char), double> distances)
+        static double[,] CreateDistanceMatrix(List<string> sequences, Dictionary<(char, char), double> distances)
         {
             var result = new double[sequences.Count, sequences.Count];
             
@@ -408,14 +416,14 @@ namespace Projekt1
             {
                 for (int j = 0; j < i; j++)
                 {
-                    result[i,j] = CountDistanceMatrixCellValue(sequences[i], sequences[j], alphabet, distances);
+                    result[i,j] = CountDistanceMatrixCellValue(sequences[i], sequences[j], distances);
                 }
             }
             return result;
         }
 
         static double CountDistanceMatrixCellValue(string firstSequence, string secondSequence,
-            List<char> alphabet, Dictionary<(char, char), double> distances)
+            Dictionary<(char, char), double> distances)
         {
             double[,] valueMatrix = new double[firstSequence.Length + 1, secondSequence.Length + 1];
             List<double> results;
@@ -615,6 +623,27 @@ namespace Projekt1
             }
 
             return sum / numberOfElements;
+        }
+
+        static void testAliligments(List<char> alphabet, Dictionary<(char, char), double> similarity)
+        {
+            List<string> firstList = new List<string>();
+            List<string> secondList = new List<string>();
+
+            firstList.Add("AGCA");
+            secondList.Add("AGAGA");
+
+            //firstList.Add("CGGC");
+
+            double[,] firstProfile = CreateProfile(firstList, alphabet);
+            double[,] secondProfile = CreateProfile(secondList, alphabet);
+            var multi1 = firstList.ToArray().Select(x => x.ToCharArray()).ToArray();
+            var multi2 = firstList.ToArray().Select(x => x.ToCharArray()).ToArray();
+            var result = ConcatSequences(firstProfile, secondProfile, multi1, multi2, alphabet, similarity, false);
+
+            foreach (var x in result) {
+                Console.WriteLine(x);
+            }
         }
     }
 }

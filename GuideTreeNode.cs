@@ -8,6 +8,7 @@ namespace Projekt1
         public double distanceToRightChild;
         public GuideTreeNode leftChild;
         public GuideTreeNode rightChild;
+        public List<string> alligment;
         public string name;
 
         public GuideTreeNode(double distanceToLeftChild, double distanceToRightChild, GuideTreeNode leftChild,
@@ -18,6 +19,19 @@ namespace Projekt1
             this.leftChild = leftChild;
             this.rightChild = rightChild;
             this.name = name;
+        }
+
+
+        public List<string> GetCurrentAlligment()
+        {
+            if (leftChild == null && rightChild == null)
+            {
+                List<string> result = new List<string>();
+                result.Add(name);
+                return result;
+            }
+
+            return alligment;
         }
     }
 }
