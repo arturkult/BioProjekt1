@@ -631,14 +631,13 @@ namespace Projekt1
             List<string> secondList = new List<string>();
 
             firstList.Add("AGCA");
+            firstList.Add("CGGC");
             secondList.Add("AGAGA");
-
-            //firstList.Add("CGGC");
 
             double[,] firstProfile = CreateProfile(firstList, alphabet);
             double[,] secondProfile = CreateProfile(secondList, alphabet);
             var multi1 = firstList.ToArray().Select(x => x.ToCharArray()).ToArray();
-            var multi2 = firstList.ToArray().Select(x => x.ToCharArray()).ToArray();
+            var multi2 = secondList.ToArray().Select(x => x.ToCharArray()).ToArray();
             var result = ConcatSequences(firstProfile, secondProfile, multi1, multi2, alphabet, similarity, false);
 
             foreach (var x in result) {
