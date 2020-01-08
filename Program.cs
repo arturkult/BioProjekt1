@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 
 namespace Projekt1
 {
@@ -9,11 +10,21 @@ namespace Projekt1
     {
         static void Main(string[] args)
         {
-            //(string matrixFileName, string[] fileNames, List<char> alphabet) = ParseArguments(args);
-            string matrixFileName = "similarity.csv";
-            string distanceFileName = "distances.csv";
-            string[] fileNames = new string[] { "plik2.csv", "plik1.csv" };
-            List<char> alphabet = new List<char> { 'A', 'G', 'T', 'C', '-' };
+
+            (string matrixFileName,
+             string distanceFileName,
+             string[] fileNames,
+             List<char> alphabet,
+             bool showProfile,
+             bool showConsensusWord,
+             bool showDistance,
+             bool showTree,
+             bool showScoreMatrix) = ParseArguments(args);
+            //string matrixFileName = "similarity.csv";
+            //string distanceFileName = "distances.csv";
+            //string[] fileNames = new string[] { "plik2.csv", "plik1.csv" };
+            //string[] fileNames = new string[] { "plik2.csv", "plik1.csv" };
+            //List<char> alphabet = new List<char> { 'A', 'G', 'T', 'C', '-' };
             List<double[,]> resultProfiles = new List<double[,]>();
             List<List<char>> alphabets = new List<List<char>>();
             List<List<string>> matrices = new List<List<string>>();
@@ -30,35 +41,47 @@ namespace Projekt1
                     matrices.Add(CreateMatrix(fileName));
                     var profile = CreateProfile(matrices.Last(), alphabet);
                     resultProfiles.Add(profile);
-                    PrintProfileMatrix(profile, alphabet);
-                    var consensusWord = CreateConsensusWord(profile, alphabet);
-                    Console.WriteLine($"\nSłowo konsensusowe: {consensusWord}");
+                    if (showProfile)
+                    {
+                        PrintProfileMatrix(profile, alphabet);
+                    }
+                    if (showConsensusWord)
+                    {
+                        var consensusWord = CreateConsensusWord(profile, alphabet);
+                        Console.WriteLine($"\nSłowo konsensusowe: {consensusWord}");
+                    }
                 }
                 var concatenated = ConcatSequences(resultProfiles.First(),
                                 resultProfiles.Last(),
                                 matrices.First().Select(s => s.ToCharArray()).ToArray(),
                                 matrices.Last().Select(s => s.ToCharArray()).ToArray(),
                                 alphabet,
-                                similarity);
-                Console.WriteLine("\nZłożenie wielodopasowań");
+                                similarity,
+                                showScoreMatrix);
+                Console.WriteLine("\nZłożenie wielodopasowań metodą Needlemana-Wunscha");
                 foreach (var s in concatenated)
                 {
                     Console.WriteLine(s);
                 }
 
                 allSequences = matrices.SelectMany(x => x).ToList();
-                PrintLegend(allSequences);
 
                 distanceMatrix = CreateDistanceMatrix(allSequences, distances);
-                Console.WriteLine("\nDistance matrix:");
-                PrintDistances(distanceMatrix);
+                if (showDistance)
+                {
+                    PrintLegend(allSequences);
+                    Console.WriteLine("\nDistance matrix:");
+                    PrintDistances(distanceMatrix);
+                }
 
                 guideTree = CreateGuideTreeWithUPGMA(distanceMatrix, allSequences);
-                Console.WriteLine("\nGuide tree:");
-                guideTree.PrintTree();
-
+                if (showTree)
+                {
+                    Console.WriteLine("\nGuide tree:");
+                    guideTree.PrintTree();
+                }
                 var treeRootNodeAlligments = GetAlligmentsFromRootNode(guideTree.rootNode, alphabet, similarity);
-                Console.WriteLine("\nZłożenie wielodopasowań");
+                Console.WriteLine("\nZłożenie wielodopasowań metodą progressive multialinging");
                 foreach (var alligment in treeRootNodeAlligments)
                 {
                     Console.WriteLine(alligment);
@@ -72,15 +95,30 @@ namespace Projekt1
             }
         }
 
-        private static (string matrixFileName, string[] fileNames, List<char> alphabet) ParseArguments(string[] args)
+        private static (string matrixFileName,
+            string distanceFileName,
+            string[] fileNames,
+
+            List<char> alphabet,
+            bool showProfile,
+            bool showConsensusWord,
+            bool showDistance,
+            bool showTree,
+            bool showScoreMatrix) ParseArguments(string[] args)
         {
             string matrixFileName = string.Empty;
+            string distanceFileName = string.Empty;
             string[] fileNames = new string[2];
+            bool showProfile = false;
+            bool showConsensusWord = false;
+            bool showScoreMatrix = false;
+            bool showDistance = false;
+            bool showTree = false;
             var alphabet = new List<char>();
             for (int i = 0; i < args.Length; i += 2)
             {
                 string command = args[i];
-                string argument = args[i + 1];
+                string argument = i + 1 >= args.Length ? string.Empty : args[i + 1];
                 switch (command)
                 {
                     case "--similarity":
@@ -94,10 +132,43 @@ namespace Projekt1
                     case "--alphabet":
                     case "-a":
                         alphabet = argument.Split(';').SelectMany(a => a.ToUpper().ToCharArray()).ToList();
+                        if (!alphabet.Contains('-'))
+                        {
+                            alphabet.Add('-');
+                        }
+                        break;
+                    case "--distances":
+                    case "-d":
+                        distanceFileName = argument;
+                        break;
+                    case "--show-profile":
+                    case "-P":
+                        i -= 1;
+                        showProfile = true;
+                        break;
+                    case "--show-consensus-word":
+                    case "-C":
+                        i -= 1;
+                        showConsensusWord = true;
+                        break;
+                    case "--show-score-matrix":
+                    case "-S":
+                        i -= 1;
+                        showScoreMatrix = true;
+                        break;
+                    case "--show-distances":
+                    case "-D":
+                        i -= 1;
+                        showDistance = true;
+                        break;
+                    case "--show-tree":
+                    case "-T":
+                        i -= 1;
+                        showTree = true;
                         break;
                 }
             }
-            return (matrixFileName, fileNames, alphabet);
+            return (matrixFileName, distanceFileName, fileNames, alphabet, showProfile, showConsensusWord, showDistance, showTree, showScoreMatrix);
         }
 
         private static Dictionary<(char, char), double> GetMatrix(string fileName)
@@ -118,7 +189,7 @@ namespace Projekt1
                     result.Add(
                         (lineChars[0].ToCharArray().First(),
                         header[i].ToCharArray().First()),
-                        double.Parse(lineChars[i]));
+                        double.Parse(lineChars[i], CultureInfo.InvariantCulture));
                 }
             }
             return result;
@@ -142,8 +213,8 @@ namespace Projekt1
             {
                 PrintScoreMatrix(scoreMatrix);
             }
-            
-            while(i>0 || j > 0)
+
+            while (i > 0 || j > 0)
             {
                 var newi = i;
                 var newj = j;
@@ -261,7 +332,7 @@ namespace Projekt1
                                                           alphabet,
                                                           similarity);
                     matrix[i, j] = new double[] { up, left, cross }.Max();
-                    if(matrix[i, j] == cross)
+                    if (matrix[i, j] == cross)
                     {
                         result[i, j] = 'C';
                     }
@@ -416,12 +487,12 @@ namespace Projekt1
         static double[,] CreateDistanceMatrix(List<string> sequences, Dictionary<(char, char), double> distances)
         {
             var result = new double[sequences.Count, sequences.Count];
-            
+
             for (int i = 0; i < sequences.Count; i++)
             {
                 for (int j = 0; j < i; j++)
                 {
-                    result[i,j] = CountDistanceMatrixCellValue(sequences[i], sequences[j], distances);
+                    result[i, j] = CountDistanceMatrixCellValue(sequences[i], sequences[j], distances);
                 }
             }
             return result;
@@ -456,9 +527,9 @@ namespace Projekt1
                     results.Add(valueMatrix[i - 1, j - 1] + increase);
                     results.Add(valueMatrix[i - 1, j] + 1);
                     results.Add(valueMatrix[i, j - 1] + 1);
-                    
+
                     valueMatrix[i, j] = results.Min();
-                } 
+                }
             }
 
             return valueMatrix[firstSequence.Length, secondSequence.Length];
@@ -508,7 +579,7 @@ namespace Projekt1
                 idsOfSequencesInGroups.Add(newList);
             }
 
-            DoUPGMAIteration(guideTree, distanceMatrix, distanceMatrix,idsOfSequencesInGroups);
+            DoUPGMAIteration(guideTree, distanceMatrix, distanceMatrix, idsOfSequencesInGroups);
             return guideTree;
         }
 
@@ -599,7 +670,7 @@ namespace Projekt1
                 for (int j = 0; j < i; j++)
                 {
                     result[i, j] = CalculateValueForDistanceMatrixCell(idsOfSequencesInGroups,
-                        originalDistanceMatrix, (i,j));
+                        originalDistanceMatrix, (i, j));
                 }
             }
 
